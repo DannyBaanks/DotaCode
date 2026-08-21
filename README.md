@@ -261,23 +261,55 @@ DotaCode/
 
 ## TESTURINGS
 
-DotaCode es **Turing-completo**. Verificado implementando modelos
-computacionales clásicos usando solo las 7 primitivas:
+### Lo que SI esta demostrado
 
-| Prueba                         | Resultado  |
-|--------------------------------|------------|
-| Minsky 2-counter machine       | VERIFIED   |
-| Minsky loop/counter            | VERIFIED   |
-| Brainfuck interpreter ('A')    | VERIFIED   |
-| Brainfuck interpreter ('Hi')   | VERIFIED   |
-| Rule 110 transition function   | VERIFIED   |
-| SKI combinator                 | VERIFIED   |
+`minsky_dotacode.py` compila una maquina de contadores a **triggers de
+DotaCode**. Python solo ensambla; el computo lo hace `run_loop` despachando
+eventos y aplicando efectos del runtime (`inc_state`, `dec_state`, `emit`).
 
-Referencia: Minsky (1967), Wolfram (2002), Curry (1930).
+```
+INC(r, j)        trigger ON STATE_i -> [inc_state(r), emit(STATE_j)]
 
-Ver `tests/testurings.py` para la implementación completa.
+JZDEC(r, j, k)   trigger ON STATE_i  si contador > 0
+                     -> [dec_state(r), emit(STATE_j)]
+                 trigger ON STATE_i  si contador == 0
+                     -> [emit(STATE_k)]
+```
 
----
+La bifurcacion la decide el motor evaluando `if_cond`, no un `if` de Python.
+Resultados medidos:
+
+```
+suma(7,5)       -> a = 12      (dos registros exactos)
+multiplica(6,7) -> acc = 42
+```
+
+`tests/test_minsky_dotacode.py` incluye `test_el_motor_hace_el_trabajo`, que
+compila el programa **sin** ejecutar el bucle y comprueba que no hay resultado;
+solo tras `run_loop` aparece. Esa es la diferencia entre una reduccion y una
+simulacion en Python.
+
+**Alcance:** DotaCode expresa cualquier programa de maquina de contadores. Las
+de dos registros son Turing-completas bajo una codificacion de la entrada
+(Minsky, 1967). La afirmacion hereda esa condicion, ni una mas.
+
+### Lo que NO esta demostrado
+
+`tests/testurings.py` (Brainfuck, Rule 110, SKI, y las dos Minsky antiguas)
+**no son reducciones.** Auditado el 2026-08-21: calculan en Python y guardan el
+resultado en `gs.globals`, y luego afirman sobre el valor que ellos mismos
+metieron:
+
+```python
+if instr[0] == "INC":
+    e.state[reg] = e.state.get(reg, 0) + 1     # dict de Python, + 1 de Python
+```
+
+Se conservan como especificacion ejecutable de los modelos que se quiere
+alcanzar, con una advertencia en la cabecera del modulo. No cuentan como
+evidencia. Cuando alguno se implemente sobre el runtime, sube a la seccion de
+arriba con su test.
+
 
 ## Limitaciones
 

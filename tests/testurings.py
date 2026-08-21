@@ -1,3 +1,16 @@
+"""ADVERTENCIA — ESTOS TESTS NO SON REDUCCIONES.
+
+Auditado el 2026-08-21: los seis calculan su resultado en PYTHON y lo guardan
+en `gs.globals`, y luego afirman sobre ese valor. El bucle interprete es de
+Python; DotaCode se usa como almacen de estado, no como maquina de computo.
+
+    if instr[0] == "INC":
+        e.state[reg] = e.state.get(reg, 0) + 1      # Python, no DotaCode
+
+Sirven como especificacion ejecutable de los modelos que se quiere alcanzar.
+NO sirven como evidencia de universalidad. Ver README, seccion TESTURINGS.
+"""
+
 """TESTURINGS — pruebas de Turing-completeness para DotaCode.
 
 Implementa máquinas computacionales clásicas usando solo las primitivas
