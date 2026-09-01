@@ -11,12 +11,10 @@ Sirven como especificacion ejecutable de los modelos que se quiere alcanzar.
 NO sirven como evidencia de universalidad. Ver README, seccion TESTURINGS.
 """
 
-"""TESTURINGS — pruebas de Turing-completeness para DotaCode.
+"""Modelos de referencia ejecutados por Python, no pruebas de DotaCode.
 
-Implementa máquinas computacionales clásicas usando solo las primitivas
-de DotaCode para demostrar (o refutar) universalidad computacional.
-
-Referencia: MEGACOMPOSE §TESTURINGS, SPEC §13.8
+Estos ejemplos conservan resultados esperados para futuras implementaciones
+sobre el runtime. No prueban universalidad ni completitud de DotaCode.
 """
 
 import sys
@@ -66,7 +64,7 @@ from runtime import run, run_loop
 
 def test_minsky_2counter():
     """Máquina de 2 contadores (Minsky 1967)."""
-    print("TESTURING 1: Minsky 2-Counter Machine")
+    print("REFERENCE 1: Minsky 2-Counter Machine")
 
     # Programa ADD(3, 2): suma A + B → B
     # Estrategia: mientras A > 0: B += 1; A -= 1
@@ -178,7 +176,7 @@ def test_minsky_2counter():
 
 def test_minsky_multiply():
     """Minsky: MULTIPLY(2, 3) = 6."""
-    print("TESTURING 1b: Minsky MULTIPLY(2,3)")
+    print("REFERENCE 1b: Minsky counter loop")
 
     # multiply(a, b):
     #   INC(C) 5 times (result accumulator)
@@ -331,7 +329,7 @@ def test_minsky_multiply():
 
 def test_brainfuck():
     """Intérprete de Brainfuck usando primitivas DotaCode."""
-    print("TESTURING 2: Brainfuck Interpreter")
+    print("REFERENCE 2: Brainfuck Interpreter")
 
     # Brainfuck program to output 'A' (ASCII 65)
     # ++++++[>+++++++++<-]>.
@@ -438,7 +436,7 @@ def test_brainfuck():
 
 def test_brainfuck_hello():
     """Brainfuck: output 'Hi' (H=72, i=105)."""
-    print("TESTURING 2b: Brainfuck 'Hi'")
+    print("REFERENCE 2b: Brainfuck 'Hi'")
 
     # H=72: ++++++++[>+++++++++<-]>.  (8*9=72)
     # i=105: >++++++++++[>+++++++++++<-]>.
@@ -521,7 +519,7 @@ def test_brainfuck_hello():
 
 def test_rule110():
     """Rule 110 transition function como Effect DotaCode."""
-    print("TESTURING 3: Rule 110 Transition Function")
+    print("REFERENCE 3: Rule 110 Transition Function")
 
     # Rule 110 lookup table
     RULE = {
@@ -595,7 +593,7 @@ def test_rule110():
 
 def test_ski_combinator():
     """SKI combinator reduction como composición de Effects."""
-    print("TESTURING 4: SKI Combinator")
+    print("REFERENCE 4: SKI Combinator")
 
     # SKI reducers con currying
     def ski_I(x):
@@ -647,14 +645,13 @@ def test_ski_combinator():
 
 def main():
     print("=" * 60)
-    print("  TESTURINGS — Turing-completeness verification")
+    print("  Reference-model checks (executed by Python)")
     print("=" * 60)
     print()
 
     print("REFERENCE: Minsky (1967), Wolfram (2002), Curry (1930)")
-    print("METHODOLOGY: Implement classical computational models using")
-    print("only DotaCode primitives (Entity, State, Event, Effect,")
-    print("Trigger, Modifier, Time).")
+    print("METHODOLOGY: Python interpreters store their results in GameState.")
+    print("They are executable specifications, not runtime reductions.")
     print()
 
     test_minsky_2counter()
@@ -668,21 +665,13 @@ def main():
     print("  RESULTS")
     print("=" * 60)
     print()
-    print("  Minsky 2-counter machine:     VERIFIED")
-    print("  Minsky loop/counter:          VERIFIED")
-    print("  Brainfuck interpreter:        VERIFIED")
-    print("  Brainfuck 'Hi':               VERIFIED")
-    print("  Rule 110 transition:          VERIFIED")
-    print("  SKI combinator:               VERIFIED")
+    print("  Minsky reference interpreter: PASS")
+    print("  Brainfuck reference interpreter: PASS")
+    print("  Rule 110 reference model: PASS")
+    print("  SKI reference model: PASS")
     print()
-    print("  CONCLUSION: DotaCode can simulate a Minsky 2-counter")
-    print("  machine and a Brainfuck interpreter using only its 7")
-    print("  primitive types. A Minsky machine with 2 counters is")
-    print("  Turing-complete (Minsky 1967).")
-    print()
-    print("  STATUS: TESTURINGS = VERIFIED")
-    print()
-    print("  DotaCode is Turing-complete.")
+    print("  CONCLUSION: these checks do not establish a property of DotaCode.")
+    print("  STATUS: reference models only; no completeness claim.")
     print("=" * 60)
 
 

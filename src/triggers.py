@@ -30,20 +30,22 @@ def event_parents(event_type: str) -> list[str]:
     return _EVENT_HIERARCHY.get(event_type, [])
 
 
-def matches(trigger_on: str, event_type: str) -> bool:
-    """Verifica si un trigger escucha un tipo de evento."""
-    if trigger_on == "_":
-        return True
-    if trigger_on == event_type:
-        return True
-    return event_type in event_parents(event_type) and trigger_on in event_parents(event_type)
-    # Simplified: match directo o wildcard
-    # La herencia completa requiere traversal recursivo
-
-
 def match_event(trigger_on: str, event_type: str) -> bool:
-    """Match estricto: trigger_on == event_type, o trigger_on == '_'."""
-    return trigger_on == "_" or trigger_on == event_type
+    """Aplica el matching exacto, wildcard y de herencia de SPEC §5."""
+    if trigger_on == "_" or trigger_on == event_type:
+        return True
+
+    pending = list(event_parents(event_type))
+    seen: set[str] = set()
+    while pending:
+        parent = pending.pop()
+        if parent in seen:
+            continue
+        if parent == trigger_on:
+            return True
+        seen.add(parent)
+        pending.extend(event_parents(parent))
+    return False
 
 
 def eval_condition(

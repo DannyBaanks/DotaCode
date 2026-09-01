@@ -170,9 +170,9 @@ def example_4_buff():
             tags={"buff"},
         )(gs, {})
 
-        # Emitir 5 ON_TICK para que el modifier ejecute on_tick 4 veces
-        for _ in range(5):
-            emit("ON_TICK", source=hero.id)(gs, {})
+        # Un evento futuro hace avanzar el reloj cinco veces; el buff recibe
+        # cuatro ticks antes de expirar. Eventos en tick 0 no consumen tiempo.
+        emit_delayed("ON_TICK", 5, source=hero.id)(gs, {})
 
     gs = run(seed=42, setup_fn=setup)
     hero = list(gs.entities.values())[0]
@@ -277,9 +277,8 @@ def example_7_resource_loop():
 
     def setup(gs):
         hero = gs.spawn_entity("hero", {"mana": 20, "mana_max": 100, "mana_regen": 10})
-        # Emitir ticks para que regen se ejecute
-        for _ in range(10):
-            emit("ON_TICK", source=hero.id)(gs, {})
+        # El evento futuro hace transcurrir diez ticks de regeneración.
+        emit_delayed("ON_TICK", 10, source=hero.id)(gs, {})
 
     gs = run(seed=42, setup_fn=setup, max_ticks=20)
     hero = list(gs.entities.values())[0]

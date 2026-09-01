@@ -39,6 +39,7 @@ def process_event(gs: GameState, ev: Event) -> GameState:
         "target": ev.target,
         "event": ev,
     }
+    event_modifiers = list(gs.modifiers.values())
 
     # 1. Encontrar y ejecutar triggers que matchean
     matches = find_matching_triggers(gs, ev)
@@ -73,21 +74,36 @@ def process_event(gs: GameState, ev: Event) -> GameState:
                 ev.target, state_before, "scheduled_effect", state_after,
             )
 
-    # 3. Procesar modifiers on_tick
+    # 3. Cada modifier activo observa cada evento, como define su contrato.
+    # The snapshot prevents a modifier applied by this event from observing the
+    # event that created it.
+    for mod in event_modifiers:
+        if gs.get_modifier(mod.id) is mod and mod.on_event:
+            gs = mod.on_event(gs, {**ctx, "modifier": mod})
+
+    return gs
+
+
+def _advance_tick(gs: GameState) -> GameState:
+    """Avanza un tick y aplica exclusivamente el trabajo dependiente del tiempo."""
+    gs.tick += 1
+    ctx: dict[str, Any] = {"event_id": 0, "event_type": "ON_TICK"}
+
+    # Modifiers periódicos se ejecutan una vez por tick, no por evento.
     for mod in list(gs.modifiers.values()):
         if mod.on_tick and mod.duration != 0:
             target_entity = gs.get_entity(mod.target)
             if target_entity and target_entity.alive:
                 ctx_mod = {
-                    "event_id": ev.id,
-                    "event_type": ev.type,
+                    "event_id": 0,
+                    "event_type": "ON_TICK",
                     "source": mod.source,
                     "target": mod.target,
                     "modifier": mod,
                 }
                 gs = mod.on_tick(gs, ctx_mod)
 
-    # 4. Decrementar cooldowns (recursos con sufijo _cooldown)
+    # Decrementar cooldowns (recursos con sufijo _cooldown).
     for e in gs.alive_entities():
         for key in list(e.state.keys()):
             if key.endswith("_cooldown") and e.state[key] > 0:
@@ -97,7 +113,7 @@ def process_event(gs: GameState, ev: Event) -> GameState:
                     emit("ON_COOLDOWN_READY", source=e.id,
                          payload={"ability": key})(gs, ctx)
 
-    # 5. Aplicar regeneración de recursos
+    # Aplicar regeneración de recursos.
     for e in gs.alive_entities():
         for key in list(e.state.keys()):
             if key.endswith("_regen") and e.state[key] > 0:
@@ -112,7 +128,7 @@ def process_event(gs: GameState, ev: Event) -> GameState:
                     else:
                         e.state[resource] = current + rate
 
-    # 6. Decrementar duración de modifiers
+    # Decrementar duración de modifiers.
     expired = []
     for mod in list(gs.modifiers.values()):
         if mod.duration > 0:
@@ -136,27 +152,42 @@ def process_event(gs: GameState, ev: Event) -> GameState:
 def run_loop(gs: GameState, max_ticks: int = 10000) -> GameState:
     """Bucle principal de ejecución.
 
-    Procesa eventos tick por tick hasta que no queden más o se alcance max_ticks.
-    """
-    while not gs.events.is_empty():
-        if gs.tick > max_ticks:
-            break
+    Procesa eventos hasta que no queden más o se alcance max_ticks.
 
+    ``max_ticks`` limita tanto el reloj lógico como los despachos que pueden
+    ocurrir en un mismo tick. El segundo límite evita que un handler que emite
+    infinitamente eventos para ``tick_now`` no pueda terminar la ejecución.
+    """
+    events_this_tick = 0
+    while not gs.events.is_empty():
         if gs.paused:
-            gs.tick += 1
+            if gs.tick >= max_ticks:
+                break
+            gs = _advance_tick(gs)
+            events_this_tick = 0
             continue
 
-        # Sacar siguiente evento
+        next_event = gs.events.peek()
+        if next_event is None:
+            break
+
+        # El tiempo sólo cambia al cruzar a un tick posterior. Esto hace que
+        # modifiers, cooldowns y regeneración no dependan del número de eventos.
+        while next_event.tick > gs.tick:
+            if gs.tick >= max_ticks:
+                return gs
+            gs = _advance_tick(gs)
+            events_this_tick = 0
+
+        # Bound same-tick cascades as well as future-tick simulations.
+        if events_this_tick >= max_ticks:
+            break
+
         ev = gs.events.pop()
         if ev is None:
             break
-
-        # Si el evento es de un tick futuro, avanzar el reloj
-        if ev.tick > gs.tick:
-            gs.tick = ev.tick
-
-        # Procesar
         gs = process_event(gs, ev)
+        events_this_tick += 1
 
     return gs
 

@@ -199,6 +199,12 @@ run_loop(σ) =
     run_loop(σ')
 ```
 
+La implementación impone `max_ticks` como límite del reloj y como máximo de
+despachos dentro de un mismo tick. El segundo límite es una protección de
+terminación para programas que emiten otro evento para el tick actual; al
+alcanzarlo, los eventos pendientes permanecen en la cola para una ejecución
+posterior.
+
 ### 3.3. Procesamiento de eventos `process_next_event`
 
 ```
@@ -216,22 +222,34 @@ process_next_event(σ) =
             else:
                 σ' = emit(σ', ON_ACTION_BLOCKED, τ.source, ev)
 
-    # 3. Procesar modifiers periódicos (on_tick)
-    for μ in active_modifiers(σ'):
+    # 3. Los modifiers activos al iniciar el evento reciben on_event para ev
+    for μ in active_modifiers_at_event_start(σ):
+        if μ.on_event ≠ Null AND μ.duration ≠ 0:
+            σ' = run_effect(μ.on_event, σ', context(μ, ev))
+
+    return σ'
+```
+
+El trabajo dependiente del tiempo se ejecuta al avanzar el reloj, una vez por
+tick, nunca una vez por evento:
+
+```
+advance_tick(σ) =
+    σ.tick = σ.tick + 1
+    for μ in active_modifiers(σ):
         if μ.on_tick ≠ Null AND μ.duration ≠ 0:
             σ' = run_effect(μ.on_tick, σ', μ.context)
-            σ' = tick_modifier(μ, σ')
 
-    # 4. Decrementar cooldowns
+    # Decrementar cooldowns
     for (e, ability) in active_cooldowns(σ'):
         σ' = decrement_cooldown(e, ability, σ')
 
-    # 5. Aplicar regeneración de recursos
+    # Aplicar regeneración de recursos
     for e in alive_entities(σ'):
         for (res, rate) in regen_rates(e):
             σ' = gain(e, res, rate, σ')
 
-    # 6. Avanzar tiempo de modifiers
+    # Avanzar tiempo de modifiers
     for μ in active_modifiers(σ'):
         σ' = tick_modifier(μ, σ')
 
@@ -804,14 +822,15 @@ Los efectos que dependen de stacks leen `μ.stacks`. Ejemplo:
 
 **Estado:** PROPOSED.
 
-### 13.8. Turing-completeness
+### 13.8. Alcance computacional
 
-**Decisión:** No asumir. Tras implementar el runtime, intentar construir:
+**Decisión:** No asumir una propiedad de universalidad. Tras implementar el
+runtime, evaluar reducciones ejecutadas enteramente por el runtime:
 1. Un contador de 2 estados (Minsky) usando `vars` + `while`
 2. Un recognizer de Brainfuck simple usando I/O + vars + loop
 
-Si se logra: TESTURINGS = VERIFIED.
-Si no: documentar el límite.
+Si se logra, documentar el alcance y sus límites junto con la reducción. Si no,
+documentar el límite.
 
 **Estado:** UNVERIFIED — requiere runtime implementado.
 

@@ -225,6 +225,13 @@ def test_match_event_wildcard():
     assert match_event("_", "ON_DAMAGE")
     print("  [PASS] match_event wildcard")
 
+def test_match_event_inheritance():
+    """SPEC §5: un padre de evento matchea a todos sus descendientes."""
+    assert match_event("ON_HIT", "ON_MELEE_HIT")
+    assert match_event("ON_DAMAGE", "ON_MELEE_HIT")
+    assert not match_event("ON_CAST", "ON_MELEE_HIT")
+    print("  [PASS] match_event inheritance")
+
 def test_find_matching_triggers():
     gs = GameState(seed=1)
     hero = gs.spawn_entity("hero")
@@ -357,9 +364,10 @@ def test_runtime_cooldown():
     gs = GameState(seed=42)
     hero = gs.spawn_entity("hero", {"fireball_cooldown": 3})
 
-    # Emitir 3 ticks para que cooldown llegue a 0
+    # Three events at tick zero do not consume three cooldown ticks.
     for _ in range(3):
         emit("ON_TICK")(gs, {})
+    emit_delayed("ON_TICK", 3)(gs, {})
     gs = run_loop(gs, max_ticks=10)
     assert hero.state["fireball_cooldown"] == 0
     print("  [PASS] runtime cooldown")
@@ -371,11 +379,60 @@ def test_runtime_regen():
     hero = gs.spawn_entity("hero", {"hp": 50, "hp_max": 100, "hp_regen": 5})
 
     emit("ON_TICK")(gs, {})
-    emit("ON_TICK")(gs, {})
+    emit_delayed("ON_TICK", 2)(gs, {})
     gs = run_loop(gs, max_ticks=10)
-    # After 2 ticks: 50 + 5 + 5 = 60
+    # Two elapsed ticks: 50 + 5 + 5 = 60.
     assert hero.state["hp"] == 60
     print("  [PASS] runtime regen")
+
+
+def test_runtime_modifier_time_advances_per_tick():
+    gs = GameState(seed=42)
+    hero = gs.spawn_entity("hero", {"ticks": 0})
+    apply_modifier(
+        hero.id, hero.id, "DOT", 2,
+        on_tick=inc_state(hero.id, "ticks"),
+    )(gs, {})
+    emit("ON_TEST")(gs, {})
+    emit("ON_TEST")(gs, {})
+    emit_delayed("ON_TEST", 2)(gs, {})
+
+    gs = run_loop(gs, max_ticks=10)
+
+    assert hero.state["ticks"] == 2
+    assert not gs.has_modifier_type(hero.id, "DOT")
+
+
+def test_runtime_modifier_on_event_receives_each_event():
+    gs = GameState(seed=42)
+    hero = gs.spawn_entity("hero", {"observed": 0})
+    apply_modifier(
+        hero.id, hero.id, "OBSERVER", -1,
+        on_event=inc_state(hero.id, "observed"),
+    )(gs, {})
+    emit("ON_TEST")(gs, {})
+    emit("ON_OTHER")(gs, {})
+
+    gs = run_loop(gs, max_ticks=10)
+
+    # The modifier also sees the application event emitted by apply_modifier.
+    assert hero.state["observed"] == 3
+
+
+def test_runtime_max_ticks_bounds_same_tick_loop():
+    gs = GameState(seed=42)
+    hero = gs.spawn_entity("hero", {"runs": 0})
+    gs.add_trigger(Trigger(
+        id=gs.new_trigger_id(), on="ON_LOOP", source=hero.id,
+        then=[inc_state(hero.id, "runs"), emit("ON_LOOP", source=hero.id)],
+    ))
+    emit("ON_LOOP", source=hero.id)(gs, {})
+
+    gs = run_loop(gs, max_ticks=3)
+
+    assert hero.state["runs"] == 3
+    assert not gs.events.is_empty()
+    assert gs.tick == 0
 
 
 def test_determinism():
@@ -482,6 +539,7 @@ def main():
     print("\nTrigger matching:")
     test_match_event_exact()
     test_match_event_wildcard()
+    test_match_event_inheritance()
     test_find_matching_triggers()
 
     print("\nGating:")
@@ -502,6 +560,9 @@ def main():
     test_runtime_emit_and_process()
     test_runtime_cooldown()
     test_runtime_regen()
+    test_runtime_modifier_time_advances_per_tick()
+    test_runtime_modifier_on_event_receives_each_event()
+    test_runtime_max_ticks_bounds_same_tick_loop()
     test_determinism()
 
     print("\nInvariants (SPEC §15):")

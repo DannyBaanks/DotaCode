@@ -224,12 +224,13 @@ Ver `examples/examples_10.py` para los 10 ejemplos del megacompose.
 ## Tests
 
 ```bash
-python tests/test_core.py
-python examples/examples_10.py
+py -m pytest -q
+py tests/test_core.py
+py tests/test_minsky_dotacode.py
+py examples/examples_10.py
 ```
 
-**29 tests** de invariantes y funcionalidad.
-**10 ejemplos** del megacompose verificados.
+**42 pruebas automatizadas** y **10 ejemplos** del megacompose verificados.
 
 ---
 
@@ -250,11 +251,11 @@ DotaCode/
 │   ├── triggers.py       # Matching de triggers + gating
 │   └── runtime.py        # run_loop (ciclo de ejecución)
 ├── tests/
-│   └── test_core.py      # 29 tests de invariantes
+│   ├── test_core.py          # 30 tests de invariantes
+│   ├── test_minsky_dotacode.py  # máquina de contadores (suma/multiplica)
+│   └── testurings.py         # auditoría TESTURINGS (no evidencia)
 ├── examples/
 │   └── examples_10.py    # 10 ejemplos del megacompose
-├── traces/
-└── docs/
 ```
 
 ---
@@ -289,9 +290,10 @@ compila el programa **sin** ejecutar el bucle y comprueba que no hay resultado;
 solo tras `run_loop` aparece. Esa es la diferencia entre una reduccion y una
 simulacion en Python.
 
-**Alcance:** DotaCode expresa cualquier programa de maquina de contadores. Las
-de dos registros son Turing-completas bajo una codificacion de la entrada
-(Minsky, 1967). La afirmacion hereda esa condicion, ni una mas.
+**Alcance:** estas pruebas cubren programas concretos de maquina de contadores
+compilados a triggers y ejecutados con un límite finito de ticks. La
+universalidad de las máquinas de dos contadores es un resultado externo
+(Minsky, 1967); estas pruebas no demuestran que DotaCode sea Turing-completo.
 
 ### Lo que NO esta demostrado
 
