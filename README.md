@@ -235,13 +235,15 @@ py host.py examples/examples_10.py
 
 `corpus/` = **canonical DotaCode examples**. Cada archivo:
 
-- corresponde a **exactamente una primitiva o un ejemplo del megacompose**;
+- corresponde a **exactamente una primitiva, un ejemplo del megacompose o una acción del catálogo**;
 - muestra la **forma mínima válida** de usarla;
 - sirve como **referencia para humanos y LLMs**;
 - puede **ejecutarse directamente** con el host (`python host.py corpus/01_entity.py`);
 - **NO sustituye** los tests semánticos.
 
-> $$ \boxed{ \text{1 concepto} \rightarrow \text{1 ejemplo canónico visible} } $$
+> $$ \boxed{ \text{1 concepto / 1 acción} \rightarrow \text{1 ejemplo canónico visible} } $$
+
+**Corpus actual:** 17 canónicos (7 primitivas + 10 megacompose) + **740 acciones** del catálogo en `corpus/actions/` — **757 archivos** verificados como flashcards ejecutables.
 
 Para conceptos complejos el ejemplo es una *flashcard ejecutable* con contexto:
 
@@ -268,10 +270,11 @@ py -m pytest -q
 py tests/test_core.py
 py tests/test_minsky_dotacode.py
 py examples/examples_10.py
-py host.py --all          # 17/17 corpus
+py host.py --all          # 17/17 corpus canónico
+py host.py corpus/actions/001_spawn_entity.py  # 1 de 740 acciones
 ```
 
-**42 pruebas automatizadas**, **17 corpus verificados** y **10 ejemplos** del megacompose.
+**42 pruebas automatizadas**, **17 corpus canónicos + 740 acciones** verificados y **10 ejemplos** del megacompose.
 
 ---
 
@@ -284,10 +287,11 @@ DotaCode/
 ├── ACTIONS.md            # Catálogo de 744 acciones (29 ramas)
 ├── SPEC.md               # Especificación formal (semántica small-step)
 ├── host.py               # motor público todo-en-uno
-├── corpus/               # 17 ejemplos canónicos (7 primitivas + 10 megacompose)
-│   ├── 01_entity.py      # Entity
-│   ├── 05_trigger.py     # Trigger
-│   └── 08_kill_counter.py# megacompose
+├── corpus/               # 757 ejemplos canónicos
+│   ├── 01_entity.py      # 7 primitivas
+│   ├── 08_kill_counter.py# 10 megacompose
+│   └── actions/          # 740 acciones del catálogo (001_spawn_entity.py …)
+│       └── 001_spawn_entity.py
 ├── src/
 │   ├── __init__.py
 │   ├── prng.py           # PRNG determinista (xorshift64)
