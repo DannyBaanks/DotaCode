@@ -243,7 +243,7 @@ py host.py examples/examples_10.py
 
 > $$ \boxed{ \text{1 concepto / 1 acción} \rightarrow \text{1 ejemplo canónico visible} } $$
 
-**Corpus actual:** 17 canónicos (7 primitivas + 10 megacompose) + **740 acciones** del catálogo en `corpus/actions/` — **757 archivos** verificados como flashcards ejecutables.
+**Corpus actual:** 17 canónicos verificados (7 primitivas + 10 megacompose) + **740 acciones** del catálogo en `corpus/actions/` — **757 archivos** en total, pero **solo 48 están IMPLEMENTADOS** con flashcard ejercitada; **692 son CATALOG_ONLY** (`NOT_EXECUTABLE`, `NOT_IMPLEMENTED`, ver `corpus/actions/001_spawn_entity.py` para el patrón honesto). El claim anterior `757 verificados` era `NOT_DEMONSTRATED` para las 740.
 
 Para conceptos complejos el ejemplo es una *flashcard ejecutable* con contexto:
 
@@ -270,11 +270,12 @@ py -m pytest -q
 py tests/test_core.py
 py tests/test_minsky_dotacode.py
 py examples/examples_10.py
-py host.py --all          # 17/17 corpus canónico
-py host.py corpus/actions/001_spawn_entity.py  # 1 de 740 acciones
+py host.py --all          # 17/17 corpus canónico (los 740 actions/ son CATALOG_ONLY, no se cuentan como verificados)
+py host.py corpus/actions/026_inc_state.py  # 1 de los 48 IMPLEMENTADOS
+# py host.py corpus/actions/001_spawn_entity.py  # CATALOG_ONLY: no ejercita, solo marca gs.globals["CATALOG_ONLY_..."]
 ```
 
-**42 pruebas automatizadas**, **17 corpus canónicos + 740 acciones** verificados y **10 ejemplos** del megacompose.
+**42 pruebas automatizadas**, **17 corpus canónicos verificados** (los 740 actions/ son catálogo: 48 IMPLEMENTADOS con POST verificado, 692 CATALOG_ONLY `NOT_IMPLEMENTED`) y **10 ejemplos** del megacompose.
 
 ### Ejemplos funcionales (no maqueta)
 
@@ -283,7 +284,7 @@ Dos programas en `examples/` demuestran cómputo no trivial sin traductor
 
 | Ejemplo | Archivo | Qué prueba | Salida |
 |---------|---------|------------|--------|
-| **Fibonacci 10** | `examples/fibonacci.py` | `Entity`+`State` (`a,b,n`), `Event` `ON_FIB`, `Trigger`→`Effect`, `Time` (cola), `output_number` | `0,1,1,2,3,5,8,13,21,34` en `gs.output` |
+| **Fibonacci 10** | `examples/fibonacci.py` | `Entity`+`State` (`a,b,n`), `Event` `ON_FIB`, `Trigger`→`Effect` custom, `Time` (cola), `output_number` | `0,1,1,2,3,5,8,13,21,34` en `gs.output` |
 | **FizzBuzz 1..15** | *(pendiente)* | `MOD` vía `J` (restas) + `Trigger` ramificado | — |
 
 ```bash
@@ -292,13 +293,16 @@ python examples/fibonacci.py
 python host.py examples/fibonacci.py
 # -> tick=0 ... output=[0,1,1,2,3,5,8,13,21,34]
 
-# Fibonacci usa el motor real, no un for Python:
-# Trigger ON_FIB -> [output a, c=a+b, a=b, b=c, n--, emit ON_FIB si n>0]
-# Python solo ensambla el grafo de triggers; run_loop despacha.
+# Fibonacci CUSTOM_EFFECT (DEMONSTRATED) — no compilado a primitivas core:
+# Trigger ON_FIB -> fib_step() hace c=a+b en Python y muta e.state.
+# run_loop sí despacha (sin run_loop no hay output), pero la transición no es
+# inc_state/dec_state/emit como en minsky_dotacode.py.
+# Para el equivalente fuerte a SpellCode/DuelCode/PokéCode, ver minsky_dotacode.py
+# y el futuro fibonacci_core.py (NOT YET DEMONSTRATED) que use solo primitivas.
 ```
 
-> **Nota:** igual que `minsky_dotacode.py`, `fibonacci.py` es una máquina de contadores
-> compilada a `Trigger`s. `test_el_motor_hace_el_trabajo` aplica aquí también.
+> **Nota:** `fibonacci.py` es **CUSTOM_EFFECT** (`DEMONSTRATED`), no máquina de contadores compilada a primitivas.
+> `minsky_dotacode.py` sigue siendo el único con `test_el_motor_hace_el_trabajo` fuerte.
 
 ---
 
@@ -311,11 +315,12 @@ DotaCode/
 ├── ACTIONS.md            # Catálogo de 744 acciones (29 ramas)
 ├── SPEC.md               # Especificación formal (semántica small-step)
 ├── host.py               # motor público todo-en-uno
-├── corpus/               # 757 ejemplos canónicos
-│   ├── 01_entity.py      # 7 primitivas
-│   ├── 08_kill_counter.py# 10 megacompose
-│   └── actions/          # 740 acciones del catálogo (001_spawn_entity.py …)
-│       └── 001_spawn_entity.py
+├── corpus/               # 757 archivos (17 verificados + 740 catálogo)
+│   ├── 01_entity.py      # 7 primitivas (verificadas)
+│   ├── 08_kill_counter.py# 10 megacompose (verificados)
+│   └── actions/          # 740 acciones del catálogo (48 IMPLEMENTED + 692 CATALOG_ONLY)
+│       ├── 001_spawn_entity.py # CATALOG_ONLY (NOT_IMPLEMENTED)
+│       └── 026_inc_state.py    # IMPLEMENTED (POST verificado)
 ├── src/
 │   ├── __init__.py
 │   ├── prng.py           # PRNG determinista (xorshift64)

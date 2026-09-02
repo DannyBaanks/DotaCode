@@ -1,29 +1,14 @@
 # 049 stack_size — (name) -> Nat 
 # Tamaño de la pila
-# PRE: -
-# POST: referencia canónica — forma mínima válida
-from gamestate import GameState
+# STATUS: CATALOG_ONLY — NOT_EXECUTABLE — NOT_IMPLEMENTED
+# Esta acción está en ACTIONS.md pero NO existe aún en src/effects|gamestate|dtypes|prng.
+# No es una flashcard ejercitada; es referencia de catálogo para humanos/LLMs.
+# Para que sea ejercitada, implementar stack_size en el runtime y regenerar.
+# PRE: — (no aplicable)
+# POST: — (no aplicable)
 
 def setup(gs):
-    # Setup mínimo para que el archivo sea ejecutable sin depender de implementación completa
-    hero = gs.spawn_entity("hero", {"hp": 100, "hp_max": 100}, (0, 0), {"hero"})
-    # Intento de uso canónico de stack_size (si existe en el runtime, no falla el corpus)
-    try:
-        import effects as _eff
-        fn = getattr(_eff, "stack_size", None)
-        if fn is None:
-            import gamestate as _gs
-            fn = getattr(_gs, "stack_size", None)
-        if fn is None:
-            import dtypes as _dt
-            fn = getattr(_dt, "stack_size", None)
-        if fn is None:
-            import prng as _prng
-            fn = getattr(_prng, "stack_size", None)
-        # No llamamos con args reales para no romper si la firma no coincide;
-        # solo verificamos que el símbolo existe o documentamos.
-        # Para acciones con firma conocida, se podría añadir llamada dummy aquí.
-        pass
-    except Exception:
-        pass
-    # Mantiene el archivo ejecutable y verificable
+    # No-Op honesto: no finge llamar a stack_size. Marca explícitamente el estado.
+    gs.globals["CATALOG_ONLY_stack_size"] = True
+    # NOT_IMPLEMENTED — no se verifica comportamiento
+    pass

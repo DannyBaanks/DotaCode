@@ -1,6 +1,12 @@
 # Fibonacci DotaCode — 10 terminos (0 1 1 2 3 5 8 13 21 34)
-# Demuestra runtime completo: Entity, State, Event, Trigger, Time
-# Sin bucle Python: el motor run_loop despacha ON_FIB y aplica effects
+# STATUS: DEMONSTRATED via custom Effect (no compilado a primitivas core)
+# Demuestra runtime real: Entity, State, Event, Trigger, Time
+# run_loop sí despacha ON_FIB y Trigger llama el effect, pero la transición
+# Fibonacci (c=a+b, a=b, b=c) está escrita directamente en Python dentro del Effect.
+# Es un ejemplo válido de custom effect sobre el runtime (un Effect puede ser callable Python),
+# pero NO es equivalente a SpellCode/DuelCode/PokéCode donde la suma se compila a
+# primitivas reales (inc_state/dec_state/emit) y el motor decide la bifurcación.
+# Para el equivalente fuerte a Minsky, ver minsky_dotacode.py + test_el_motor_hace_el_trabajo.
 # Cada termino se emite como OUT_NUMBER, visible en gs.output
 
 import sys, os
