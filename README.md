@@ -276,6 +276,30 @@ py host.py corpus/actions/001_spawn_entity.py  # 1 de 740 acciones
 
 **42 pruebas automatizadas**, **17 corpus canónicos + 740 acciones** verificados y **10 ejemplos** del megacompose.
 
+### Ejemplos funcionales (no maqueta)
+
+Dos programas en `examples/` demuestran cómputo no trivial sin traductor
+(la misma idea que en PokéCode/SpellCode/DuelCode, cada uno en su dominio):
+
+| Ejemplo | Archivo | Qué prueba | Salida |
+|---------|---------|------------|--------|
+| **Fibonacci 10** | `examples/fibonacci.py` | `Entity`+`State` (`a,b,n`), `Event` `ON_FIB`, `Trigger`→`Effect`, `Time` (cola), `output_number` | `0,1,1,2,3,5,8,13,21,34` en `gs.output` |
+| **FizzBuzz 1..15** | *(pendiente)* | `MOD` vía `J` (restas) + `Trigger` ramificado | — |
+
+```bash
+python examples/fibonacci.py
+# -> fib: [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]
+python host.py examples/fibonacci.py
+# -> tick=0 ... output=[0,1,1,2,3,5,8,13,21,34]
+
+# Fibonacci usa el motor real, no un for Python:
+# Trigger ON_FIB -> [output a, c=a+b, a=b, b=c, n--, emit ON_FIB si n>0]
+# Python solo ensambla el grafo de triggers; run_loop despacha.
+```
+
+> **Nota:** igual que `minsky_dotacode.py`, `fibonacci.py` es una máquina de contadores
+> compilada a `Trigger`s. `test_el_motor_hace_el_trabajo` aplica aquí también.
+
 ---
 
 ## Estructura
