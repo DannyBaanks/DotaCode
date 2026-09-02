@@ -221,6 +221,46 @@ Ver `examples/examples_10.py` para los 10 ejemplos del megacompose.
 
 ---
 
+## Ejecución
+
+```bash
+# Motor público
+py host.py corpus/01_entity.py
+py host.py --list
+py host.py --all          # 17/17 corpus
+py host.py examples/examples_10.py
+```
+
+### Corpus canónico `corpus/` — 1 primitiva/ejemplo → 1 archivo visible
+
+`corpus/` = **canonical DotaCode examples**. Cada archivo:
+
+- corresponde a **exactamente una primitiva o un ejemplo del megacompose**;
+- muestra la **forma mínima válida** de usarla;
+- sirve como **referencia para humanos y LLMs**;
+- puede **ejecutarse directamente** con el host (`python host.py corpus/01_entity.py`);
+- **NO sustituye** los tests semánticos.
+
+> $$ \boxed{ \text{1 concepto} \rightarrow \text{1 ejemplo canónico visible} } $$
+
+Para conceptos complejos el ejemplo es una *flashcard ejecutable* con contexto:
+
+```python
+# PRE: hero hp=50
+# POST: hero hp=70 (gain respeta max)
+hero = gs.spawn_entity("hero", {"hp": 50, "hp_max": 100})
+gain(hero.id, "hp", 20)(gs, {})
+```
+
+Separación limpia:
+
+| Carpeta/archivo | Rol |
+|---|---|
+| `corpus/` | **cómo se usa** |
+| `tests/` | **cómo sabemos que funciona** |
+| `README` / `SPEC` | **qué significa** |
+| `host.py` + `src/` | **cómo se ejecuta** |
+
 ## Tests
 
 ```bash
@@ -228,9 +268,10 @@ py -m pytest -q
 py tests/test_core.py
 py tests/test_minsky_dotacode.py
 py examples/examples_10.py
+py host.py --all          # 17/17 corpus
 ```
 
-**42 pruebas automatizadas** y **10 ejemplos** del megacompose verificados.
+**42 pruebas automatizadas**, **17 corpus verificados** y **10 ejemplos** del megacompose.
 
 ---
 
@@ -242,6 +283,11 @@ DotaCode/
 ├── MODEL_DISCOVERY.md    # Fase 1: descubrimiento del modelo
 ├── ACTIONS.md            # Catálogo de 744 acciones (29 ramas)
 ├── SPEC.md               # Especificación formal (semántica small-step)
+├── host.py               # motor público todo-en-uno
+├── corpus/               # 17 ejemplos canónicos (7 primitivas + 10 megacompose)
+│   ├── 01_entity.py      # Entity
+│   ├── 05_trigger.py     # Trigger
+│   └── 08_kill_counter.py# megacompose
 ├── src/
 │   ├── __init__.py
 │   ├── prng.py           # PRNG determinista (xorshift64)
@@ -255,7 +301,7 @@ DotaCode/
 │   ├── test_minsky_dotacode.py  # máquina de contadores (suma/multiplica)
 │   └── testurings.py         # auditoría TESTURINGS (no evidencia)
 ├── examples/
-│   └── examples_10.py    # 10 ejemplos del megacompose
+│   └── examples_10.py    # 10 ejemplos del megacompose (también en corpus/)
 ```
 
 ---
