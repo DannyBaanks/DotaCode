@@ -286,7 +286,8 @@ Dos programas en `examples/` demuestran cómputo no trivial sin traductor
 |---------|---------|------------|--------|
 | **Fibonacci 10** | `examples/fibonacci.py` | `Entity`+`State` (`a,b,n`), `Event` `ON_FIB`, `Trigger`→`Effect` custom, `Time` (cola) | `0,1,1,2,3,5,8,13,21,34` |
 | **Fibonacci CORE 10** | `examples/fibonacci_core.py` | `inc_state`/`dec_state`/`emit` compilados a `Trigger`s, `output_number` | `0,1,1,2,3,5,8,13,21,34` (solo primitivas, motor decide) |
-| **FizzBuzz 1..15** | `examples/fizzbuzz.py` | `i%3`/`i%5` vía `Trigger` custom (honesto, como `fibonacci.py`) | `1,2,Fizz,4,Buzz,Fizz,7,8,Fizz,Buzz,11,Fizz,13,14,FizzBuzz` |
+| **FizzBuzz 1..15** | `examples/fizzbuzz.py` | `i%3`/`i%5` vía `Trigger` custom (honesta) | `1,2,Fizz...FizzBuzz` |
+| **FizzBuzz CORE 1..15** | `examples/fizzbuzz_core.py` | `inc_state`/`dec_state`/`emit` para `r=i%3`/`r=i%5` con bucles, `output_string` | `1,2,Fizz...` (MOD puro, en progreso) |
 
 ```bash
 python examples/fibonacci.py          # custom Effect
