@@ -11,6 +11,7 @@ def setup(gs):
     fn = getattr(_eff, "set_state", None) or getattr(_gs, "set_state", None) or getattr(_gs.GameState, "set_state", None) or getattr(_dt, "set_state", None)
     assert fn is not None, "set_state no encontrado"
     # Llamada canónica real
-    eff = set_state(hero.id, 'hp', 1) if 'set_state' not in ('get_state',) else set_state(hero.id, 'hp')
-    eff(gs, {}) if callable(eff) else None
-    assert hero.state.get('hp') is not None
+    eff = fn(hero.id, 'hp', 999)
+    eff(gs, {})
+    
+    assert hero.state['hp'] == 999

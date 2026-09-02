@@ -11,6 +11,8 @@ def setup(gs):
     fn = getattr(_eff, "gain", None) or getattr(_gs, "gain", None) or getattr(_gs.GameState, "gain", None) or getattr(_dt, "gain", None)
     assert fn is not None, "gain no encontrado"
     # Llamada canónica real
-    eff = gain(hero.id, 'hp', 10)
-    eff(gs, {}) if callable(eff) else None
-    assert True
+    eff = fn(hero.id, 'hp', 10)
+    before = hero.state['hp']
+    eff(gs, {})
+    
+    assert hero.state['hp'] == min(before+10, hero.state.get('hp_max', 9999))

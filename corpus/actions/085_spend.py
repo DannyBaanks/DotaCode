@@ -11,6 +11,8 @@ def setup(gs):
     fn = getattr(_eff, "spend", None) or getattr(_gs, "spend", None) or getattr(_gs.GameState, "spend", None) or getattr(_dt, "spend", None)
     assert fn is not None, "spend no encontrado"
     # Llamada canónica real
-    eff = spend(hero.id, 'hp', 10)
-    eff(gs, {}) if callable(eff) else None
-    assert True
+    eff = fn(hero.id, 'hp', 10)
+    before = hero.state['hp']
+    eff(gs, {})
+    
+    assert hero.state['hp'] == before - 10

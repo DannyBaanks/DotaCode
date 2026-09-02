@@ -11,6 +11,10 @@ def setup(gs):
     fn = getattr(_eff, "get_var", None) or getattr(_gs, "get_var", None) or getattr(_gs.GameState, "get_var", None) or getattr(_dt, "get_var", None)
     assert fn is not None, "get_var no encontrado"
     # Llamada canónica real
-    eff = get_var('test_var')
-    eff(gs, {}) if callable(eff) else None
-    assert True
+    import effects as _e2
+    _e2.set_var('test_var', 99)(gs, {})
+    eff = fn('test_var')
+    ctx={}
+    eff(gs, ctx)
+    
+    assert ctx.get('result') == 99

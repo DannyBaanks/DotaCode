@@ -11,6 +11,7 @@ def setup(gs):
     fn = getattr(_eff, "output_newline", None) or getattr(_gs, "output_newline", None) or getattr(_gs.GameState, "output_newline", None) or getattr(_dt, "output_newline", None)
     assert fn is not None, "output_newline no encontrado"
     # Llamada canónica real
-    eff = output_newline()
-    eff(gs, {}) if callable(eff) else None
-    assert True
+    eff = fn()
+    eff(gs, {})
+    
+    assert gs.output[-1].value == chr(10) or gs.output[-1].value == '\n'

@@ -11,6 +11,7 @@ def setup(gs):
     fn = getattr(_eff, "apply_modifier", None) or getattr(_gs, "apply_modifier", None) or getattr(_gs.GameState, "apply_modifier", None) or getattr(_dt, "apply_modifier", None)
     assert fn is not None, "apply_modifier no encontrado"
     # Llamada canónica real
-    eff = apply_modifier(hero.id, hero.id, 1, 1, 1, None, <Severity.BASIC: 1>, False, {'hero'}, None, None)
-    eff(gs, {}) if callable(eff) else None
-    assert True
+    eff = fn(hero.id, hero.id, 'TEST_BUFF', 5)
+    eff(gs, {})
+    
+    assert gs.has_modifier_type(hero.id, 'TEST_BUFF')

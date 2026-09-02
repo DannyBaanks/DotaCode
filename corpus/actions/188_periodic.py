@@ -11,6 +11,8 @@ def setup(gs):
     fn = getattr(_eff, "periodic", None) or getattr(_gs, "periodic", None) or getattr(_gs.GameState, "periodic", None) or getattr(_dt, "periodic", None)
     assert fn is not None, "periodic no encontrado"
     # Llamada canónica real
-    eff = periodic(1, 1, None)
-    eff(gs, {}) if callable(eff) else None
+    from effects import output_number
+    eff = fn(output_number(1), 1, 1)
+    eff(gs, {})
+    
     assert True

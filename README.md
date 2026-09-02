@@ -316,8 +316,9 @@ DotaCode/
 │   ├── 01_entity.py      # 7 primitivas (verificadas)
 │   ├── 08_kill_counter.py# 10 megacompose (verificados)
 │   └── actions/          # 740 acciones del catálogo (48 IMPLEMENTED + 692 CATALOG_ONLY)
-│       ├── 001_spawn_entity.py # CATALOG_ONLY (NOT_IMPLEMENTED)
-│       └── 026_inc_state.py    # IMPLEMENTED (POST verificado)
+│       ├── 001_spawn_entity.py # IMPLEMENTED (POST verificado, dummy id != hero)
+│       ├── 003_exists.py       # CATALOG_ONLY (NOT_IMPLEMENTED)
+│       └── 026_inc_state.py    # IMPLEMENTED (POST hp 100->101)
 ├── src/
 │   ├── __init__.py
 │   ├── prng.py           # PRNG determinista (xorshift64)

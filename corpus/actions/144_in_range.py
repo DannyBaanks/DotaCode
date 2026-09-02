@@ -11,6 +11,9 @@ def setup(gs):
     fn = getattr(_eff, "in_range", None) or getattr(_gs, "in_range", None) or getattr(_gs.GameState, "in_range", None) or getattr(_dt, "in_range", None)
     assert fn is not None, "in_range no encontrado"
     # Llamada canónica real
-    eff = in_range(1, 1, 1)
-    eff(gs, {}) if callable(eff) else None
-    assert True
+    hero2 = gs.spawn_entity('dummy', {}, (1,0))
+    eff = fn(hero.id, hero2.id, 5)
+    ctx={}
+    eff(gs, ctx)
+    
+    assert ctx.get('result') == True

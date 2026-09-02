@@ -11,6 +11,10 @@ def setup(gs):
     fn = getattr(_eff, "global_get", None) or getattr(_gs, "global_get", None) or getattr(_gs.GameState, "global_get", None) or getattr(_dt, "global_get", None)
     assert fn is not None, "global_get no encontrado"
     # Llamada canónica real
-    eff = global_get('test_var')
-    eff(gs, {}) if callable(eff) else None
-    assert True
+    import effects as _e2
+    _e2.global_set('gtest', 55)(gs, {})
+    eff = fn('gtest')
+    ctx={}
+    eff(gs, ctx)
+    
+    assert ctx.get('result') == 55

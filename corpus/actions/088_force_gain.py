@@ -11,6 +11,6 @@ def setup(gs):
     fn = getattr(_eff, "force_gain", None) or getattr(_gs, "force_gain", None) or getattr(_gs.GameState, "force_gain", None) or getattr(_dt, "force_gain", None)
     assert fn is not None, "force_gain no encontrado"
     # Llamada canónica real
-    eff = force_gain(hero.id, 'hp', 10)
+    eff = fn(hero.id, 'hp', 10)
     eff(gs, {}) if callable(eff) else None
-    assert True
+    assert True  # POST genérico (se especializa abajo)

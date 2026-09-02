@@ -11,6 +11,8 @@ def setup(gs):
     fn = getattr(_eff, "clamp_state", None) or getattr(_gs, "clamp_state", None) or getattr(_gs.GameState, "clamp_state", None) or getattr(_dt, "clamp_state", None)
     assert fn is not None, "clamp_state no encontrado"
     # Llamada canónica real
-    eff = clamp_state(hero.id, 'hp', 1) if 'clamp_state' not in ('get_state',) else clamp_state(hero.id, 'hp')
-    eff(gs, {}) if callable(eff) else None
-    assert hero.state.get('hp') is not None
+    hero.state['hp']=300
+    eff = fn(hero.id, 'hp', 0, 200)
+    eff(gs, {})
+    
+    assert hero.state['hp'] == 200

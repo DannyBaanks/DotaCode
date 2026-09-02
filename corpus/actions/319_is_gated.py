@@ -11,5 +11,7 @@ def setup(gs):
     fn = getattr(_eff, "is_gated", None) or getattr(_gs, "is_gated", None) or getattr(_gs.GameState, "is_gated", None) or getattr(_dt, "is_gated", None)
     assert fn is not None, "is_gated no encontrado"
     # Llamada canónica real
-    gs.is_gated(hero.id, 1)
-    assert True  # no lanzó
+    from dtypes import ActionType
+    res = gs.is_gated(hero.id, ActionType.MOVE)
+    
+    assert isinstance(res, bool)

@@ -11,6 +11,7 @@ def setup(gs):
     fn = getattr(_eff, "emit_delayed", None) or getattr(_gs, "emit_delayed", None) or getattr(_gs.GameState, "emit_delayed", None) or getattr(_dt, "emit_delayed", None)
     assert fn is not None, "emit_delayed no encontrado"
     # Llamada canónica real
-    eff = emit_delayed(1, 1, 1)
-    eff(gs, {}) if callable(eff) else None
+    eff = fn('TEST_EV', 1, source=hero.id)
+    eff(gs, {})
+    
     assert True

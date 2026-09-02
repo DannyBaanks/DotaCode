@@ -11,5 +11,9 @@ def setup(gs):
     fn = getattr(_eff, "get_modifier", None) or getattr(_gs, "get_modifier", None) or getattr(_gs.GameState, "get_modifier", None) or getattr(_dt, "get_modifier", None)
     assert fn is not None, "get_modifier no encontrado"
     # Llamada canónica real
-    gs.get_modifier(1)
-    assert True  # no lanzó
+    import effects as _e2
+    _e2.apply_modifier(hero.id, hero.id, 'TEST_BUFF', 5)(gs, {})
+    mid = list(gs.entity_modifiers(hero.id))[0].id
+    res = gs.get_modifier(mid)
+    
+    assert res is not None

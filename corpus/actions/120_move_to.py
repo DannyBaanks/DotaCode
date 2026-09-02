@@ -11,6 +11,7 @@ def setup(gs):
     fn = getattr(_eff, "move_to", None) or getattr(_gs, "move_to", None) or getattr(_gs.GameState, "move_to", None) or getattr(_dt, "move_to", None)
     assert fn is not None, "move_to no encontrado"
     # Llamada canónica real
-    eff = move_to(hero.id, 1, 1)
-    eff(gs, {}) if callable(eff) else None
-    assert True
+    eff = fn(hero.id, 7, 8)
+    eff(gs, {})
+    
+    assert hero.position == (7,8)

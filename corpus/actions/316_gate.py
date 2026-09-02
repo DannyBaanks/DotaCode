@@ -11,6 +11,8 @@ def setup(gs):
     fn = getattr(_eff, "gate", None) or getattr(_gs, "gate", None) or getattr(_gs.GameState, "gate", None) or getattr(_dt, "gate", None)
     assert fn is not None, "gate no encontrado"
     # Llamada canónica real
-    eff = gate(hero.id, 1, 1)
-    eff(gs, {}) if callable(eff) else None
-    assert True
+    from dtypes import ActionType
+    eff = fn(hero.id, {ActionType.MOVE}, 5)
+    eff(gs, {})
+    
+    assert gs.is_gated(hero.id, ActionType.MOVE)

@@ -11,6 +11,7 @@ def setup(gs):
     fn = getattr(_eff, "set_var", None) or getattr(_gs, "set_var", None) or getattr(_gs.GameState, "set_var", None) or getattr(_dt, "set_var", None)
     assert fn is not None, "set_var no encontrado"
     # Llamada canónica real
-    eff = set_var('test_var', 1)
-    eff(gs, {}) if callable(eff) else None
-    assert True
+    eff = fn('test_var', 42)
+    eff(gs, {})
+    
+    assert gs.vars.get('test_var') == 42

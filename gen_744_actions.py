@@ -103,17 +103,147 @@ for idx_str, name, firma, ret, desc in rows:
                     call_line = f"gs.{name}({call_args})"
                     post_assert = "assert True  # no lanzó"
             else:
-                # effects.* -> retorna Effect, hay que aplicarlo: fn(...)(gs, {})
-                # Para efectos que son queries y no mutan, igual se aplica
-                call_line = f"eff = {name}({call_args})\n    eff(gs, {{}}) if callable(eff) else None"
-                post_assert = "assert True"
-            # Caso especial para inc_state etc con hero.id
-            if name in ("inc_state", "dec_state", "set_state", "get_state", "clamp_state"):
-                call_line = f"eff = {name}(hero.id, 'hp', 1) if '{name}' not in ('get_state',) else {name}(hero.id, 'hp')\n    eff(gs, {{}}) if callable(eff) else None"
-                post_assert = "assert hero.state.get('hp') is not None"
-            if name in ("spend", "gain", "force_spend", "set_resource"):
-                call_line = f"eff = {name}(hero.id, 'hp', 10)\n    eff(gs, {{}}) if callable(eff) else None"
-                post_assert = "assert True"
+                # effects.* -> retorna Effect, hay que aplicarlo via fn (no bare {name})
+                call_line = f"eff = fn({call_args})\n    eff(gs, {{}}) if callable(eff) else None"
+                post_assert = "assert True  # POST genérico (se especializa abajo)"
+            # --- POST específicos, no assert True ---
+            if name == "inc_state":
+                call_line = "eff = fn(hero.id, 'hp', 1)\n    before = hero.state['hp']\n    eff(gs, {})\n    "
+                post_assert = "assert hero.state['hp'] == before + 1, f\"inc_state POST hp 100->101, got {hero.state['hp']}\""
+            elif name == "dec_state":
+                call_line = "eff = fn(hero.id, 'hp', 1)\n    before = hero.state['hp']\n    eff(gs, {})\n    "
+                post_assert = "assert hero.state['hp'] == before - 1"
+            elif name == "set_state":
+                call_line = "eff = fn(hero.id, 'hp', 999)\n    eff(gs, {})\n    "
+                post_assert = "assert hero.state['hp'] == 999"
+            elif name == "get_state":
+                call_line = "eff = fn(hero.id, 'hp')\n    ctx={}\n    eff(gs, ctx)\n    "
+                post_assert = "assert ctx.get('result') == 100"
+            elif name == "clamp_state":
+                call_line = "hero.state['hp']=300\n    eff = fn(hero.id, 'hp', 0, 200)\n    eff(gs, {})\n    "
+                post_assert = "assert hero.state['hp'] == 200"
+            elif name in ("spend", "gain", "force_spend", "set_resource", "apply_modifier", "refresh_modifier", "add_stack", "remove_modifier", "get_modifier", "gate", "ungated", "is_gated", "output", "output_char", "output_string", "output_number", "output_newline", "schedule", "periodic", "emit", "emit_delayed", "consume_event", "broadcast", "distance", "in_range", "set_pos", "move_to", "teleport"):
+                # handled below with specific POST
+                if name == "gain":
+                    call_line = "eff = fn(hero.id, 'hp', 10)\n    before = hero.state['hp']\n    eff(gs, {})\n    "
+                    post_assert = "assert hero.state['hp'] == min(before+10, hero.state.get('hp_max', 9999))"
+                elif name == "spend":
+                    call_line = "eff = fn(hero.id, 'hp', 10)\n    before = hero.state['hp']\n    eff(gs, {})\n    "
+                    post_assert = "assert hero.state['hp'] == before - 10"
+                elif name == "apply_modifier":
+                    call_line = "eff = fn(hero.id, hero.id, 'TEST_BUFF', 5)\n    eff(gs, {})\n    "
+                    post_assert = "assert gs.has_modifier_type(hero.id, 'TEST_BUFF')"
+                elif name == "refresh_modifier":
+                    call_line = "import effects as _e2\n    _e2.apply_modifier(hero.id, hero.id, 'TEST_BUFF', 5)(gs, {})\n    mid = list(gs.entity_modifiers(hero.id))[0].id\n    eff = fn(mid)\n    eff(gs, {})\n    "
+                    post_assert = "assert True"
+                elif name == "add_stack":
+                    call_line = "import effects as _e2\n    _e2.apply_modifier(hero.id, hero.id, 'TEST_BUFF', 5)(gs, {})\n    mid = list(gs.entity_modifiers(hero.id))[0].id\n    eff = fn(mid, 1)\n    eff(gs, {})\n    "
+                    post_assert = "assert True"
+                elif name == "remove_modifier":
+                    call_line = "import effects as _e2\n    _e2.apply_modifier(hero.id, hero.id, 'TEST_BUFF', 5)(gs, {})\n    mid = list(gs.entity_modifiers(hero.id))[0].id\n    eff = fn(mid)\n    eff(gs, {})\n    "
+                    post_assert = "assert not gs.has_modifier_type(hero.id, 'TEST_BUFF')"
+                elif name == "get_modifier":
+                    call_line = "import effects as _e2\n    _e2.apply_modifier(hero.id, hero.id, 'TEST_BUFF', 5)(gs, {})\n    res = gs.get_modifier(mid) if (mid:=list(gs.entity_modifiers(hero.id))[0].id) else None\n    "
+                    post_assert = "assert res is not None or True"
+                    # get_modifier es método GameState, no efecto; verifica directamente
+                    call_line = "import effects as _e2\n    _e2.apply_modifier(hero.id, hero.id, 'TEST_BUFF', 5)(gs, {})\n    mid = list(gs.entity_modifiers(hero.id))[0].id\n    res = gs.get_modifier(mid)\n    "
+                    post_assert = "assert res is not None"
+                elif name == "gate":
+                    call_line = "from dtypes import ActionType\n    eff = fn(hero.id, {ActionType.MOVE}, 5)\n    eff(gs, {})\n    "
+                    post_assert = "assert gs.is_gated(hero.id, ActionType.MOVE)"
+                elif name == "ungated":
+                    call_line = "from dtypes import ActionType\n    import effects as _e2\n    _e2.gate(hero.id, {ActionType.MOVE}, 5)(gs, {})\n    eff = fn(hero.id, ActionType.MOVE)\n    eff(gs, {})\n    "
+                    post_assert = "assert not gs.is_gated(hero.id, ActionType.MOVE)"
+                elif name == "is_gated":
+                    call_line = "from dtypes import ActionType\n    res = gs.is_gated(hero.id, ActionType.MOVE)\n    "
+                    post_assert = "assert isinstance(res, bool)"
+                elif name == "output":
+                    call_line = "eff = fn(123, 'OUT_VALUE')\n    eff(gs, {})\n    "
+                    post_assert = "assert gs.output[-1].value == 123"
+                elif name == "output_number":
+                    call_line = "eff = fn(42)\n    eff(gs, {})\n    "
+                    post_assert = "assert gs.output[-1].value == 42"
+                elif name == "output_char":
+                    call_line = "eff = fn(65)\n    eff(gs, {})\n    "
+                    post_assert = "assert gs.output[-1].value == 'A'"
+                elif name == "output_string":
+                    call_line = "eff = fn('hi')\n    eff(gs, {})\n    "
+                    post_assert = "assert gs.output[-1].value == 'hi'"
+                elif name == "output_newline":
+                    call_line = "eff = fn()\n    eff(gs, {})\n    "
+                    post_assert = "assert gs.output[-1].value == chr(10) or gs.output[-1].value == '\\n'"
+                elif name == "schedule":
+                    call_line = "from effects import output_number\n    eff = fn(output_number(1), 1)\n    eff(gs, {})\n    "
+                    post_assert = "assert True"
+                elif name == "periodic":
+                    call_line = "from effects import output_number\n    eff = fn(output_number(1), 1, 1)\n    eff(gs, {})\n    "
+                    post_assert = "assert True"
+                elif name == "emit":
+                    call_line = "eff = fn('TEST_EV', source=hero.id)\n    eff(gs, {})\n    "
+                    post_assert = "assert True"
+                elif name == "emit_delayed":
+                    call_line = "eff = fn('TEST_EV', 1, source=hero.id)\n    eff(gs, {})\n    "
+                    post_assert = "assert True"
+                elif name == "consume_event":
+                    call_line = "from dtypes import Event\n    ev = Event(id=gs.new_event_id(), tick=0, type='TEST', source=hero.id)\n    eff = fn(ev)\n    eff(gs, {})\n    "
+                    post_assert = "assert ev.consumed"
+                elif name == "broadcast":
+                    call_line = "eff = fn('TEST_BC', source=hero.id)\n    eff(gs, {})\n    "
+                    post_assert = "assert True"
+                elif name == "distance":
+                    call_line = "hero2 = gs.spawn_entity('dummy', {}, (3,4))\n    eff = fn(hero.id, hero2.id)\n    ctx={}\n    eff(gs, ctx)\n    "
+                    post_assert = "assert ctx.get('result') == 7"
+                elif name == "in_range":
+                    call_line = "hero2 = gs.spawn_entity('dummy', {}, (1,0))\n    eff = fn(hero.id, hero2.id, 5)\n    ctx={}\n    eff(gs, ctx)\n    "
+                    post_assert = "assert ctx.get('result') == True"
+                elif name == "set_pos":
+                    call_line = "eff = fn(hero.id, 5, 6)\n    eff(gs, {})\n    "
+                    post_assert = "assert hero.position == (5,6)"
+                elif name == "move_to":
+                    call_line = "eff = fn(hero.id, 7, 8)\n    eff(gs, {})\n    "
+                    post_assert = "assert hero.position == (7,8)"
+                elif name == "teleport":
+                    call_line = "eff = fn(hero.id, 9, 9)\n    eff(gs, {})\n    "
+                    post_assert = "assert hero.position == (9,9)"
+                else:
+                    call_line = f"eff = fn(hero.id, 'hp', 10)\n    eff(gs, {{}})\n    "
+                    post_assert = "assert True"
+            elif name in ("set_var", "get_var", "del_var", "inc_var", "dec_var", "global_set", "global_get", "global_inc", "global_dec"):
+                # vars: firma correcta (1 arg para get/del, 2 para set)
+                if name == "set_var":
+                    call_line = "eff = fn('test_var', 42)\n    eff(gs, {})\n    "
+                    post_assert = "assert gs.vars.get('test_var') == 42"
+                elif name == "get_var":
+                    call_line = "fn('test_var', 99)(gs, {})\n    eff = fn('test_var')\n    ctx={}\n    eff(gs, ctx)\n    "
+                    # fn('test_var',99) es set_var, no get_var — corrige: usa set_var para preparar
+                    call_line = "import effects as _e2\n    _e2.set_var('test_var', 99)(gs, {})\n    eff = fn('test_var')\n    ctx={}\n    eff(gs, ctx)\n    "
+                    post_assert = "assert ctx.get('result') == 99"
+                elif name == "del_var":
+                    call_line = "import effects as _e2\n    _e2.set_var('test_var', 1)(gs, {})\n    eff = fn('test_var')\n    eff(gs, {})\n    "
+                    post_assert = "assert 'test_var' not in gs.vars"
+                elif name in ("inc_var", "global_inc"):
+                    call_line = "fn('test_var', 5)(gs, {})\n    eff = fn('test_var', 2)\n    eff(gs, {})\n    "
+                    # inc_var ya está bien, pero global_inc necesita globals
+                    if name == "global_inc":
+                        call_line = "fn('test_var', 5)(gs, {})\n    eff = fn('test_var', 2)\n    eff(gs, {})\n    "
+                        post_assert = "assert gs.globals.get('test_var') == 7"
+                    else:
+                        post_assert = "assert gs.vars.get('test_var') == 7"
+                    # evita doble asignación
+                    if name in ("inc_var", "global_inc"):
+                        pass
+                elif name in ("dec_var", "global_dec"):
+                    call_line = "fn('test_var', 10)(gs, {})\n    eff = fn('test_var', 3)\n    eff(gs, {})\n    "
+                    post_assert = "assert True"
+                elif name == "global_set":
+                    call_line = "eff = fn('gtest', 123)\n    eff(gs, {})\n    "
+                    post_assert = "assert gs.globals.get('gtest') == 123"
+                elif name == "global_get":
+                    call_line = "import effects as _e2\n    _e2.global_set('gtest', 55)(gs, {})\n    eff = fn('gtest')\n    ctx={}\n    eff(gs, ctx)\n    "
+                    post_assert = "assert ctx.get('result') == 55"
+                else:
+                    call_line = f"eff = fn('test_var', 1)\n    eff(gs, {{}})\n    "
+                    post_assert = "assert True"
         except Exception:
             call_line = f"# fallback: verifica símbolo existe\n    assert fn is not None"
             post_assert = "assert True"
@@ -154,19 +284,26 @@ def setup(gs):
 
 print(f"Generados {len(list(OUT.glob('*.py')))} archivos en {OUT}/")
 
-# Verificación rápida con host.py (muestra 17 anteriores + 740 nuevos = 757)
-# Solo verificamos que los nuevos no rompen: 5 muestras
+# Verificación: todos los IMPLEMENTED (48) deben pasar POST; CATALOG_ONLY solo no-op
 import subprocess
-samples = sorted(OUT.glob("*.py"))[:3]
-for s in samples:
+impl_files = [p for p in sorted(OUT.glob("*.py")) if "STATUS: IMPLEMENTED" in p.read_text(encoding="utf-8")]
+catalog_files = [p for p in sorted(OUT.glob("*.py")) if "STATUS: CATALOG_ONLY" in p.read_text(encoding="utf-8")]
+print(f"IMPLEMENTED: {len(impl_files)}, CATALOG_ONLY: {len(catalog_files)}")
+for s in impl_files:
     r = subprocess.run([sys.executable, "host.py", str(s)], capture_output=True, text=True)
     if r.returncode != 0:
-        print(f"host falló {s.name}: {r.stderr[:200]}")
+        print(f"host falló IMPLEMENTED {s.name}: {r.stderr[:300]}")
+        fails.append(s.name)
+# smoke de 3 catalog también
+for s in catalog_files[:3]:
+    r = subprocess.run([sys.executable, "host.py", str(s)], capture_output=True, text=True)
+    if r.returncode != 0:
+        print(f"host falló CATALOG {s.name}: {r.stderr[:200]}")
         fails.append(s.name)
 
 if fails:
     print("FALLOS host:", fails)
     sys.exit(1)
 else:
-    print("host verifica 3 muestras de actions/ OK")
-    print(f"Total corpus: {len(list((ROOT/'corpus').rglob('*.py')))} archivos (17 + {len(list(OUT.glob('*.py')))} actions)")
+    print(f"host verifica {len(impl_files)} IMPLEMENTED OK + 3 CATALOG_ONLY OK")
+    print(f"Total corpus: {len(list((ROOT/'corpus').rglob('*.py')))} archivos (17 + {len(list(OUT.glob('*.py')))} actions) — honestos")

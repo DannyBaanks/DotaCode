@@ -11,6 +11,9 @@ def setup(gs):
     fn = getattr(_eff, "consume_event", None) or getattr(_gs, "consume_event", None) or getattr(_gs.GameState, "consume_event", None) or getattr(_dt, "consume_event", None)
     assert fn is not None, "consume_event no encontrado"
     # Llamada canónica real
-    eff = consume_event(1)
-    eff(gs, {}) if callable(eff) else None
-    assert True
+    from dtypes import Event
+    ev = Event(id=gs.new_event_id(), tick=0, type='TEST', source=hero.id)
+    eff = fn(ev)
+    eff(gs, {})
+    
+    assert ev.consumed

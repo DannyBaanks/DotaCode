@@ -11,6 +11,7 @@ def setup(gs):
     fn = getattr(_eff, "force_spend", None) or getattr(_gs, "force_spend", None) or getattr(_gs.GameState, "force_spend", None) or getattr(_dt, "force_spend", None)
     assert fn is not None, "force_spend no encontrado"
     # Llamada canónica real
-    eff = force_spend(hero.id, 'hp', 10)
-    eff(gs, {}) if callable(eff) else None
+    eff = fn(hero.id, 'hp', 10)
+    eff(gs, {})
+    
     assert True

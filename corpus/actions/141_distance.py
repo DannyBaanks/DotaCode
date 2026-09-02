@@ -11,6 +11,9 @@ def setup(gs):
     fn = getattr(_eff, "distance", None) or getattr(_gs, "distance", None) or getattr(_gs.GameState, "distance", None) or getattr(_dt, "distance", None)
     assert fn is not None, "distance no encontrado"
     # Llamada canónica real
-    eff = distance(1, 1)
-    eff(gs, {}) if callable(eff) else None
-    assert True
+    hero2 = gs.spawn_entity('dummy', {}, (3,4))
+    eff = fn(hero.id, hero2.id)
+    ctx={}
+    eff(gs, ctx)
+    
+    assert ctx.get('result') == 7

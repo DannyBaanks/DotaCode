@@ -11,6 +11,7 @@ def setup(gs):
     fn = getattr(_eff, "teleport", None) or getattr(_gs, "teleport", None) or getattr(_gs.GameState, "teleport", None) or getattr(_dt, "teleport", None)
     assert fn is not None, "teleport no encontrado"
     # Llamada canónica real
-    eff = teleport(hero.id, 1, 1)
-    eff(gs, {}) if callable(eff) else None
-    assert True
+    eff = fn(hero.id, 9, 9)
+    eff(gs, {})
+    
+    assert hero.position == (9,9)

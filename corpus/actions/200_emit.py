@@ -11,6 +11,7 @@ def setup(gs):
     fn = getattr(_eff, "emit", None) or getattr(_gs, "emit", None) or getattr(_gs.GameState, "emit", None) or getattr(_dt, "emit", None)
     assert fn is not None, "emit no encontrado"
     # Llamada canónica real
-    eff = emit(1, hero.id, hero.id, None, 0)
-    eff(gs, {}) if callable(eff) else None
+    eff = fn('TEST_EV', source=hero.id)
+    eff(gs, {})
+    
     assert True

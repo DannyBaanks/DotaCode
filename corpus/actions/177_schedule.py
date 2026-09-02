@@ -11,6 +11,8 @@ def setup(gs):
     fn = getattr(_eff, "schedule", None) or getattr(_gs, "schedule", None) or getattr(_gs.GameState, "schedule", None) or getattr(_dt, "schedule", None)
     assert fn is not None, "schedule no encontrado"
     # Llamada canónica real
-    eff = schedule(1, 1)
-    eff(gs, {}) if callable(eff) else None
+    from effects import output_number
+    eff = fn(output_number(1), 1)
+    eff(gs, {})
+    
     assert True

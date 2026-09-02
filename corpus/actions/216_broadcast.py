@@ -11,6 +11,7 @@ def setup(gs):
     fn = getattr(_eff, "broadcast", None) or getattr(_gs, "broadcast", None) or getattr(_gs.GameState, "broadcast", None) or getattr(_dt, "broadcast", None)
     assert fn is not None, "broadcast no encontrado"
     # Llamada canónica real
-    eff = broadcast(1, hero.id, None)
-    eff(gs, {}) if callable(eff) else None
+    eff = fn('TEST_BC', source=hero.id)
+    eff(gs, {})
+    
     assert True

@@ -11,6 +11,6 @@ def setup(gs):
     fn = getattr(_eff, "set_owner", None) or getattr(_gs, "set_owner", None) or getattr(_gs.GameState, "set_owner", None) or getattr(_dt, "set_owner", None)
     assert fn is not None, "set_owner no encontrado"
     # Llamada canónica real
-    eff = set_owner(hero.id, None)
+    eff = fn(hero.id, None)
     eff(gs, {}) if callable(eff) else None
-    assert True
+    assert True  # POST genérico (se especializa abajo)

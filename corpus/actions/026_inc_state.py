@@ -11,6 +11,8 @@ def setup(gs):
     fn = getattr(_eff, "inc_state", None) or getattr(_gs, "inc_state", None) or getattr(_gs.GameState, "inc_state", None) or getattr(_dt, "inc_state", None)
     assert fn is not None, "inc_state no encontrado"
     # Llamada canónica real
-    eff = inc_state(hero.id, 'hp', 1) if 'inc_state' not in ('get_state',) else inc_state(hero.id, 'hp')
-    eff(gs, {}) if callable(eff) else None
-    assert hero.state.get('hp') is not None
+    eff = fn(hero.id, 'hp', 1)
+    before = hero.state['hp']
+    eff(gs, {})
+    
+    assert hero.state['hp'] == before + 1, f"inc_state POST hp 100->101, got {hero.state['hp']}"

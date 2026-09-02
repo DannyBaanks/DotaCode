@@ -11,6 +11,7 @@ def setup(gs):
     fn = getattr(_eff, "output_char", None) or getattr(_gs, "output_char", None) or getattr(_gs.GameState, "output_char", None) or getattr(_dt, "output_char", None)
     assert fn is not None, "output_char no encontrado"
     # Llamada canónica real
-    eff = output_char(1)
-    eff(gs, {}) if callable(eff) else None
-    assert True
+    eff = fn(65)
+    eff(gs, {})
+    
+    assert gs.output[-1].value == 'A'

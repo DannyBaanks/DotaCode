@@ -11,6 +11,7 @@ def setup(gs):
     fn = getattr(_eff, "set_resource", None) or getattr(_gs, "set_resource", None) or getattr(_gs.GameState, "set_resource", None) or getattr(_dt, "set_resource", None)
     assert fn is not None, "set_resource no encontrado"
     # Llamada canónica real
-    eff = set_resource(hero.id, 'hp', 10)
-    eff(gs, {}) if callable(eff) else None
+    eff = fn(hero.id, 'hp', 10)
+    eff(gs, {})
+    
     assert True

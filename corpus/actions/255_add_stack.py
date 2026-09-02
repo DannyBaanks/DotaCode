@@ -11,6 +11,10 @@ def setup(gs):
     fn = getattr(_eff, "add_stack", None) or getattr(_gs, "add_stack", None) or getattr(_gs.GameState, "add_stack", None) or getattr(_dt, "add_stack", None)
     assert fn is not None, "add_stack no encontrado"
     # Llamada canónica real
-    eff = add_stack(1, 10)
-    eff(gs, {}) if callable(eff) else None
+    import effects as _e2
+    _e2.apply_modifier(hero.id, hero.id, 'TEST_BUFF', 5)(gs, {})
+    mid = list(gs.entity_modifiers(hero.id))[0].id
+    eff = fn(mid, 1)
+    eff(gs, {})
+    
     assert True

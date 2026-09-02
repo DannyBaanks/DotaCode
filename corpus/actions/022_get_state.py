@@ -11,6 +11,8 @@ def setup(gs):
     fn = getattr(_eff, "get_state", None) or getattr(_gs, "get_state", None) or getattr(_gs.GameState, "get_state", None) or getattr(_dt, "get_state", None)
     assert fn is not None, "get_state no encontrado"
     # Llamada canónica real
-    eff = get_state(hero.id, 'hp', 1) if 'get_state' not in ('get_state',) else get_state(hero.id, 'hp')
-    eff(gs, {}) if callable(eff) else None
-    assert hero.state.get('hp') is not None
+    eff = fn(hero.id, 'hp')
+    ctx={}
+    eff(gs, ctx)
+    
+    assert ctx.get('result') == 100

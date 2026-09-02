@@ -11,6 +11,8 @@ def setup(gs):
     fn = getattr(_eff, "global_dec", None) or getattr(_gs, "global_dec", None) or getattr(_gs.GameState, "global_dec", None) or getattr(_dt, "global_dec", None)
     assert fn is not None, "global_dec no encontrado"
     # Llamada canónica real
-    eff = global_dec('test_var', 1)
-    eff(gs, {}) if callable(eff) else None
+    fn('test_var', 10)(gs, {})
+    eff = fn('test_var', 3)
+    eff(gs, {})
+    
     assert True

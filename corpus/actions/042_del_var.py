@@ -11,6 +11,9 @@ def setup(gs):
     fn = getattr(_eff, "del_var", None) or getattr(_gs, "del_var", None) or getattr(_gs.GameState, "del_var", None) or getattr(_dt, "del_var", None)
     assert fn is not None, "del_var no encontrado"
     # Llamada canónica real
-    eff = del_var('test_var')
-    eff(gs, {}) if callable(eff) else None
-    assert True
+    import effects as _e2
+    _e2.set_var('test_var', 1)(gs, {})
+    eff = fn('test_var')
+    eff(gs, {})
+    
+    assert 'test_var' not in gs.vars

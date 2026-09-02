@@ -11,6 +11,7 @@ def setup(gs):
     fn = getattr(_eff, "global_set", None) or getattr(_gs, "global_set", None) or getattr(_gs.GameState, "global_set", None) or getattr(_dt, "global_set", None)
     assert fn is not None, "global_set no encontrado"
     # Llamada canónica real
-    eff = global_set('test_var', 1)
-    eff(gs, {}) if callable(eff) else None
-    assert True
+    eff = fn('gtest', 123)
+    eff(gs, {})
+    
+    assert gs.globals.get('gtest') == 123
