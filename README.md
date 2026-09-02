@@ -286,17 +286,20 @@ Dos programas en `examples/` demuestran cómputo no trivial sin traductor
 |---------|---------|------------|--------|
 | **Fibonacci 10** | `examples/fibonacci.py` | `Entity`+`State` (`a,b,n`), `Event` `ON_FIB`, `Trigger`→`Effect` custom, `Time` (cola) | `0,1,1,2,3,5,8,13,21,34` |
 | **Fibonacci CORE 10** | `examples/fibonacci_core.py` | `inc_state`/`dec_state`/`emit` compilados a `Trigger`s, `output_number` | `0,1,1,2,3,5,8,13,21,34` (solo primitivas, motor decide) |
-| **FizzBuzz 1..15** | *(pendiente)* | `MOD` vía `J` (restas) + `Trigger` ramificado | — |
+| **FizzBuzz 1..15** | `examples/fizzbuzz.py` | `i%3`/`i%5` vía `Trigger` custom (honesto, como `fibonacci.py`) | `1,2,Fizz,4,Buzz,Fizz,7,8,Fizz,Buzz,11,Fizz,13,14,FizzBuzz` |
 
 ```bash
 python examples/fibonacci.py          # custom Effect
 # -> fib: [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]
 python examples/fibonacci_core.py     # core primitives (DEMONSTRATED)
 # -> fib_core: [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]  # 24 estados, solo inc_state/dec_state/emit
+python examples/fizzbuzz.py
+# -> 1 2 Fizz 4 Buzz Fizz 7 8 Fizz Buzz 11 Fizz 13 14 FizzBuzz
 
 # fibonacci.py CUSTOM_EFFECT: Trigger ON_FIB -> fib_step() hace c=a+b en Python.
 # fibonacci_core.py CORE: 24 estados Minsky compilados a Trigger ON STATE_i -> [inc_state/dec_state/emit]
-# Python solo ensambla; run_loop despacha y decide bifurcación vía if_cond.
+# fizzbuzz.py CUSTOM_EFFECT: Trigger ON_FIZZ -> step hace r3=i%3 r5=i%5 en Python (honesto, como fibonacci.py)
+# Python solo ensambla; run_loop despacha y decide.
 ```
 
 > **Nota:** `fibonacci.py` = `CUSTOM_EFFECT` (`DEMONSTRATED`), `fibonacci_core.py` = **core primitives** (`DEMONSTRATED`, equivalente a `minsky_dotacode.py` y a `fibonacci` de Spell/Duel/Poké).
@@ -334,7 +337,8 @@ DotaCode/
 ├── examples/
 │   ├── examples_10.py       # 10 ejemplos del megacompose (también en corpus/)
 │   ├── fibonacci.py         # Fibonacci CUSTOM_EFFECT (10 términos)
-│   └── fibonacci_core.py    # Fibonacci CORE primitives (24 estados, DEMONSTRATED)
+│   ├── fibonacci_core.py    # Fibonacci CORE primitives (24 estados, DEMONSTRATED)
+│   └── fizzbuzz.py          # FizzBuzz 1..15 CUSTOM_EFFECT
 ```
 
 ---
