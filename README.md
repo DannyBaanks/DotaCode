@@ -284,25 +284,22 @@ Dos programas en `examples/` demuestran cómputo no trivial sin traductor
 
 | Ejemplo | Archivo | Qué prueba | Salida |
 |---------|---------|------------|--------|
-| **Fibonacci 10** | `examples/fibonacci.py` | `Entity`+`State` (`a,b,n`), `Event` `ON_FIB`, `Trigger`→`Effect` custom, `Time` (cola), `output_number` | `0,1,1,2,3,5,8,13,21,34` en `gs.output` |
+| **Fibonacci 10** | `examples/fibonacci.py` | `Entity`+`State` (`a,b,n`), `Event` `ON_FIB`, `Trigger`→`Effect` custom, `Time` (cola) | `0,1,1,2,3,5,8,13,21,34` |
+| **Fibonacci CORE 10** | `examples/fibonacci_core.py` | `inc_state`/`dec_state`/`emit` compilados a `Trigger`s, `output_number` | `0,1,1,2,3,5,8,13,21,34` (solo primitivas, motor decide) |
 | **FizzBuzz 1..15** | *(pendiente)* | `MOD` vía `J` (restas) + `Trigger` ramificado | — |
 
 ```bash
-python examples/fibonacci.py
+python examples/fibonacci.py          # custom Effect
 # -> fib: [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]
-python host.py examples/fibonacci.py
-# -> tick=0 ... output=[0,1,1,2,3,5,8,13,21,34]
+python examples/fibonacci_core.py     # core primitives (DEMONSTRATED)
+# -> fib_core: [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]  # 24 estados, solo inc_state/dec_state/emit
 
-# Fibonacci CUSTOM_EFFECT (DEMONSTRATED) — no compilado a primitivas core:
-# Trigger ON_FIB -> fib_step() hace c=a+b en Python y muta e.state.
-# run_loop sí despacha (sin run_loop no hay output), pero la transición no es
-# inc_state/dec_state/emit como en minsky_dotacode.py.
-# Para el equivalente fuerte a SpellCode/DuelCode/PokéCode, ver minsky_dotacode.py
-# y el futuro fibonacci_core.py (NOT YET DEMONSTRATED) que use solo primitivas.
+# fibonacci.py CUSTOM_EFFECT: Trigger ON_FIB -> fib_step() hace c=a+b en Python.
+# fibonacci_core.py CORE: 24 estados Minsky compilados a Trigger ON STATE_i -> [inc_state/dec_state/emit]
+# Python solo ensambla; run_loop despacha y decide bifurcación vía if_cond.
 ```
 
-> **Nota:** `fibonacci.py` es **CUSTOM_EFFECT** (`DEMONSTRATED`), no máquina de contadores compilada a primitivas.
-> `minsky_dotacode.py` sigue siendo el único con `test_el_motor_hace_el_trabajo` fuerte.
+> **Nota:** `fibonacci.py` = `CUSTOM_EFFECT` (`DEMONSTRATED`), `fibonacci_core.py` = **core primitives** (`DEMONSTRATED`, equivalente a `minsky_dotacode.py` y a `fibonacci` de Spell/Duel/Poké).
 
 ---
 
@@ -334,7 +331,9 @@ DotaCode/
 │   ├── test_minsky_dotacode.py  # máquina de contadores (suma/multiplica)
 │   └── testurings.py         # auditoría TESTURINGS (no evidencia)
 ├── examples/
-│   └── examples_10.py    # 10 ejemplos del megacompose (también en corpus/)
+│   ├── examples_10.py       # 10 ejemplos del megacompose (también en corpus/)
+│   ├── fibonacci.py         # Fibonacci CUSTOM_EFFECT (10 términos)
+│   └── fibonacci_core.py    # Fibonacci CORE primitives (24 estados, DEMONSTRATED)
 ```
 
 ---
