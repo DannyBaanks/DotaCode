@@ -7,9 +7,10 @@
 
 import sys, os
 try:
-    _here = os.path.dirname(__file__)
+    _here = os.path.dirname(os.path.abspath(__file__))
 except NameError:
-    _here = r"C:\Development\ISyCo Git\DotaCode\examples"
+    # host exec no define __file__; ejecutar desde el directorio examples/
+    _here = os.path.abspath(".")
 try:
     sys.path.insert(0, os.path.join(_here, "..", "src"))
 except Exception:
